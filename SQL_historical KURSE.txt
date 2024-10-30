@@ -1,0 +1,41 @@
+WITH MaxDates AS (
+    SELECT 
+        dtridis.isin,
+        MAX(TRUNC(dtrifik.ratedatetime)) AS MAX_DATUM
+    FROM 
+        dwh_table_reader.idwh_d_index_stamm dtridis
+    INNER JOIN 
+        dwh_table_reader.idwh_f_index_kurs dtrifik ON dtridis.index_id = dtrifik.index_id 
+    WHERE 
+        dtridis.isin IS NOT NULL
+    GROUP BY 
+        dtridis.isin,
+        dtrifik.ratedatetime
+    having max(dtrifik.ratedatetime)  >= trunc(sysdate) - INTERVAL '3' DAY
+    AND max (dtrifik.ratedatetime)  <= trunc(sysdate)
+)
+
+SELECT 
+    dtridis.isin, 
+    dtridis.kurzbez AS INDEXNAME, 
+    md.MAX_DATUM,
+    dtrifik.secrate,
+    dtridis.isinactive,
+    dtridis.isinactivedate,
+    dtrcc2.CODE as CURRENCY
+FROM 
+    dwh_table_reader.idwh_d_index_stamm dtridis
+INNER JOIN 
+    dwh_table_reader.idwh_f_index_kurs dtrifik ON dtridis.index_id = dtrifik.index_id 
+INNER JOIN 
+    MaxDates md ON dtridis.isin = md.isin
+INNER JOIN 
+    dwh_table_reader.ct_currency dtrcc2 ON dtridis.currency_sid = dtrcc2.currency_sid 
+WHERE 
+    TRUNC(dtrifik.ratedatetime)=md.max_datum
+    AND dtrifik.ratedatetime  >= trunc(sysdate) - INTERVAL '3' DAY
+    ---AND max (dtrifik.ratedatetime)  <= trunc(sysdate)
+    AND
+    dtridis.isin IS NOT NULL
+    AND ISINACTIVE <> '1'
+order by    dtridis.isin, md.MAX_DATUM asc

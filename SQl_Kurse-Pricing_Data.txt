@@ -1,0 +1,49 @@
+select      dtridis.isin, 
+            dtridis.kurzbez as INDEXNAME, 
+            max(trunc(dtrifik.ratedatetime)) as MAX_DATUM,
+            dtrifik.secrate,
+            dtridis.isinactive,
+            dtridis.isinactivedate
+
+from        dwh_table_reader.idwh_d_index_stamm dtridis
+inner join  dwh_table_reader.idwh_f_index_kurs dtrifik            on dtridis.index_id = dtrifik.index_id 
+inner join  dwh_table_reader.ct_currency dtrcc                    on dtrifik.currency_sid = dtrcc.currency_sid 
+inner join  dwh_table_reader.d_instrument_xfi_current_v dtrdixcv  on dtridis.isin = dtrdixcv.isin_id_h 
+inner join  dwh_table_reader.ct_currency dtrcc1                   on dtrdixcv.field_gd170_sid_h = dtrcc1.currency_sid 
+inner join  dwh_table_reader.ct_currency dtrcc2                   on dtridis.currency_sid = dtrcc2.currency_sid 
+inner join  dwh_table_reader.ct_supplier dtrcs                    on dtrifik.supplier_sid = dtrcs.supplier_sid
+
+where       dtridis.isin is not null
+            ----AND dtridis.ISINACTIVEDATE is NULL  
+and ROWNUM <= 100
+group by    (dtridis.isin, dtridis.kurzbez,
+            dtrifik.secrate,
+            dtridis.isinactive,
+            dtridis.isinactivedate)
+order by    dtridis.isin asc
+
+-------------------V2----------------------------including Price!----------------
+
+select      dtridis.isin, 
+            dtridis.kurzbez as INDEXNAME, 
+            max(trunc(dtrifik.ratedatetime)) as MAX_DATUM,
+            dtrifik.secrate,
+            dtridis.isinactive,
+            dtridis.isinactivedate,
+            dtrifik.secrate as KURS
+from        dwh_table_reader.idwh_d_index_stamm dtridis
+inner join  dwh_table_reader.idwh_f_index_kurs dtrifik            on dtridis.index_id = dtrifik.index_id 
+inner join  dwh_table_reader.ct_currency dtrcc                    on dtrifik.currency_sid = dtrcc.currency_sid 
+inner join  dwh_table_reader.d_instrument_xfi_current_v dtrdixcv  on dtridis.isin = dtrdixcv.isin_id_h 
+inner join  dwh_table_reader.ct_currency dtrcc1                   on dtrdixcv.field_gd170_sid_h = dtrcc1.currency_sid 
+inner join  dwh_table_reader.ct_currency dtrcc2                   on dtridis.currency_sid = dtrcc2.currency_sid 
+inner join  dwh_table_reader.ct_supplier dtrcs                    on dtrifik.supplier_sid = dtrcs.supplier_sid
+
+where       dtridis.isin is not null
+            ----AND dtridis.ISINACTIVEDATE is NULL  
+--and ROWNUM <= 100
+group by    (dtridis.isin, dtridis.kurzbez,
+            dtrifik.secrate,
+            dtridis.isinactive,
+            dtridis.isinactivedate)
+order by    dtridis.isin asc
